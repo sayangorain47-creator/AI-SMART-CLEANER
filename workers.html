@@ -1,0 +1,171 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Field Workers Management – Admin Portal{% endblock %}
+{% block page_title %}Field Workers Roster{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Sanitation Field Officers</h2>
+    <p style="color: #64748b; font-size: 0.9rem;">Manage worker assignments, operational workload capacity, and credentials.</p>
+  </div>
+  <button type="button" class="btn btn-primary" onclick="openModal('modal-create-worker')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    Add New Worker
+  </button>
+</div>
+
+<!-- Workers Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Officer Name</th>
+          <th>Badge ID</th>
+          <th>Assigned Ward / Zone</th>
+          <th>Active Workload</th>
+          <th>Completed</th>
+          <th>Account Status</th>
+          <th>Contact</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if workers %}
+          {% for w in workers %}
+            {% set prof = w.worker_profile %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: #0f172a;">{{ w.full_name }}</div>
+                <div style="font-size: 0.8rem; color: #64748b;">{{ w.username }}</div>
+              </td>
+              <td style="font-family: monospace; font-weight: 600;">
+                {{ prof.employee_id if prof else 'N/A' }}
+              </td>
+              <td>
+                {{ prof.assigned_locality if (prof and prof.assigned_locality) else 'General' }}
+              </td>
+              <td>
+                {% set active_cnt = prof.active_tasks_count if prof else 0 %}
+                {% set max_cnt = prof.max_active_tasks if prof else 5 %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-weight: 700; font-size: 0.95rem; color: {% if active_cnt >= max_cnt %}#dc2626{% else %}#15803d{% endif %};">
+                    {{ active_cnt }} / {{ max_cnt }}
+                  </span>
+                  {% if active_cnt >= max_cnt %}
+                    <span class="badge badge-overdue" style="font-size: 0.7rem;">Capacity Full</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <span style="font-weight: 600; color: #1e293b;">{{ prof.completed_tasks_count if prof else 0 }}</span>
+              </td>
+              <td>
+                {% if w.is_active %}
+                  <span class="badge badge-verified">Active</span>
+                {% else %}
+                  <span class="badge badge-rejected">Deactivated</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem; color: #475569;">
+                <div>{{ w.phone or 'No phone' }}</div>
+                <div style="font-size: 0.78rem; color: #64748b;">{{ w.email }}</div>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <a href="{{ url_for('admin.edit_worker', worker_id=w.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                  <form method="POST" action="{{ url_for('admin.toggle_worker_status', worker_id=w.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {% if w.is_active %}btn-warning{% else %}btn-success{% endif %}" onclick="return confirm('Toggle status for {{ w.full_name }}?')">
+                      {% if w.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem; color: #94a3b8;">
+              No field workers configured. Create one using the button above.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Create New Worker -->
+<div id="modal-create-worker" class="modal-backdrop">
+  <div class="modal-box" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 class="modal-title">Create New Field Worker Account</h3>
+      <button type="button" class="alert-close" onclick="closeModal('modal-create-worker')">&times;</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin.create_worker') }}">
+      {{ create_form.hidden_tag() }}
+      <div class="modal-body">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            {{ create_form.full_name(class="form-control", placeholder="e.g. Rajesh Kumar") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Badge / Employee ID *</label>
+            {{ create_form.employee_id(class="form-control", placeholder="e.g. EMP-201") }}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Username *</label>
+            {{ create_form.username(class="form-control", placeholder="e.g. worker_rajesh") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            {{ create_form.email(class="form-control", placeholder="e.g. rajesh@cityclean.org") }}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Initial Password *</label>
+            {{ create_form.password(class="form-control", placeholder="Min 6 characters") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            {{ create_form.phone(class="form-control", placeholder="e.g. +1 555-0199") }}
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Assigned Ward / Locality</label>
+            {{ create_form.assigned_locality(class="form-control", placeholder="e.g. Downtown Ward 4") }}
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Active Tasks Limit</label>
+            {{ create_form.max_active_tasks(class="form-control", value=5) }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes / Qualifications (Optional)</label>
+          {{ create_form.notes(class="form-control", rows=2, placeholder="Specialized machinery certification...") }}
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-worker')">Cancel</button>
+        {{ create_form.submit(class="btn btn-primary") }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

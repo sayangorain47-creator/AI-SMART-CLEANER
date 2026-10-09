@@ -1,0 +1,81 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}System Settings & SLA – Admin Portal{% endblock %}
+{% block page_title %}System Settings & Operational SLA{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px;">
+  <div style="margin-bottom: 1.5rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Platform Configuration</h2>
+    <p style="color: #64748b; font-size: 0.9rem;">
+      Adjust civic service-level agreement (SLA) deadlines and public contact channels.
+    </p>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="{{ url_for('admin.settings') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1.25rem; margin-bottom: 1.25rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem;">
+          Cleaning SLA Target
+        </h4>
+        <div class="form-group">
+          <label class="form-label">Default Target Cleaning Resolution (Hours)</label>
+          {{ form.default_deadline_hours(class="form-control", style="max-width: 200px;") }}
+          <div class="form-help">
+            Newly registered complaints automatically receive this resolution deadline (standard is 12 hours).
+          </div>
+          {% if form.default_deadline_hours.errors %}
+            <div class="form-error">{{ form.default_deadline_hours.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem;">
+          {{ form.require_after_photos() }}
+          <label for="require_after_photos" style="font-size: 0.92rem; font-weight: 600; cursor: pointer;">
+            Enforce After-Cleaning Photographic Evidence from Field Officers
+          </label>
+        </div>
+        <div class="form-help" style="margin-left: 1.6rem;">
+          When enabled, workers cannot submit a task as completed without uploading at least one verified after-cleaning photo.
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <h4 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem;">
+          Public Citizen Contact Information
+        </h4>
+
+        <div class="form-group">
+          <label class="form-label">Support Email Address</label>
+          {{ form.contact_email(class="form-control") }}
+          {% if form.contact_email.errors %}
+            <div class="form-error">{{ form.contact_email.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Municipal Sanitation Cell Phone</label>
+          {{ form.contact_phone(class="form-control") }}
+          {% if form.contact_phone.errors %}
+            <div class="form-error">{{ form.contact_phone.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Emergency Helpline Number</label>
+          {{ form.emergency_helpline(class="form-control") }}
+          {% if form.emergency_helpline.errors %}
+            <div class="form-error">{{ form.emergency_helpline.errors[0] }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        {{ form.submit(class="btn btn-primary btn-lg") }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

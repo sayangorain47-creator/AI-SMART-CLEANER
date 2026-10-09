@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Field Operations{% endblock %} – AI Smart Cleaner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Worker Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <a href="{{ url_for('worker.dashboard') }}" class="sidebar-brand">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+          </svg>
+          Field <span>Operations</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('worker.dashboard') }}" class="sidebar-link active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          My Assigned Tasks
+        </a>
+
+        <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #1e293b;">
+          <a href="{{ url_for('public.index') }}" class="sidebar-link" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Public Portal
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile-badge">
+          <div class="user-avatar" style="background-color: #0284c7;">
+            {{ current_user.full_name[:2].upper() }}
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ current_user.full_name }}</div>
+            <div class="user-role">Badge: {{ current_user.worker_profile.employee_id if current_user.worker_profile else 'Field Officer' }}</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <button id="sidebar-toggle" class="mobile-toggle" aria-label="Toggle Sidebar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <h1 class="topbar-title">{% block page_title %}Field Tasks{% endblock %}</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Notification Bell -->
+          <div style="position: relative;">
+            <button id="notification-bell" class="notification-bell-btn" aria-label="Notifications">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {% if unread_notifications_count > 0 %}
+                <span class="notification-count">{{ unread_notifications_count }}</span>
+              {% endif %}
+            </button>
+
+            <!-- Notifications Dropdown -->
+            <div id="notification-dropdown" class="modal-box" style="position: absolute; right: 0; top: 120%; width: 300px; display: none; z-index: 1000; box-shadow: var(--shadow-lg);">
+              <div style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <strong style="font-size: 0.9rem;">Task Alerts</strong>
+                {% if unread_notifications_count > 0 %}
+                  <button id="mark-notifications-read" data-url="{{ url_for('worker.mark_read') }}" class="btn btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; background: #e2e8f0;">Mark All Read</button>
+                {% endif %}
+              </div>
+              <div style="max-height: 260px; overflow-y: auto;">
+                {% if recent_notifications %}
+                  {% for n in recent_notifications %}
+                    <a href="{{ n.link or '#' }}" class="notification-item {% if not n.is_read %}unread{% endif %}" style="display: block; padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; text-decoration: none; color: inherit; background: {% if not n.is_read %}#f0fdf4{% else %}#ffffff{% endif %};">
+                      <div style="font-weight: 600; font-size: 0.85rem; color: #0f172a;">{{ n.title }}</div>
+                      <div style="font-size: 0.78rem; color: #64748b; margin-top: 0.15rem;">{{ n.message }}</div>
+                    </a>
+                  {% endfor %}
+                {% else %}
+                  <div style="padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.85rem;">No new notifications</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary btn-sm">Sign Out</a>
+        </div>
+      </header>
+
+      <!-- Flash Messages -->
+      <div style="padding: 1rem 1.75rem 0;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" class="alert-close" aria-label="Close">&times;</button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+      <div class="dashboard-body">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

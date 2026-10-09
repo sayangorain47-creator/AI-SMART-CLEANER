@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In – AI Smart Cleaner Staff Portal{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 440px; padding: 3rem 1rem;">
+  <div class="card" style="box-shadow: var(--shadow-lg); border-top: 5px solid #15803d; padding: 2rem;">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 52px; height: 52px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a;">Staff Portal Sign In</h1>
+      <p style="font-size: 0.88rem; color: #64748b;">
+        Authorized access for Sanitation Administrators & Field Workers
+      </p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        <label for="username" class="form-label">Username or Official Email</label>
+        {{ form.username(class="form-control", placeholder="e.g. admin or worker_rajesh", autofocus=True) }}
+        {% if form.username.errors %}
+          <div class="form-error">{{ form.username.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        {{ form.password(class="form-control", placeholder="Enter your password") }}
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+        {{ form.remember_me() }}
+        <label for="remember_me" style="font-size: 0.88rem; color: #475569; cursor: pointer; user-select: none;">
+          Keep me signed in on this device
+        </label>
+      </div>
+
+      <div>
+        {{ form.submit(class="btn btn-primary btn-lg btn-block") }}
+      </div>
+    </form>
+
+    <div style="margin-top: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem; font-size: 0.82rem; color: #64748b; line-height: 1.5; text-align: center;">
+      <strong>Security Notice:</strong> Public self-registration is strictly restricted for operational integrity. Worker accounts are provisioned by municipal supervisors.
+    </div>
+
+  </div>
+</div>
+{% endblock %}

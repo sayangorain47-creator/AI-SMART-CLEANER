@@ -1,0 +1,212 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Analytics & Reports – Admin Portal{% endblock %}
+{% block page_title %}Analytics & Intelligence{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Cleanliness Operations Intelligence</h2>
+    <p style="color: #64748b; font-size: 0.9rem;">Real-time metrics calculated dynamically from municipal database records.</p>
+  </div>
+  <a href="{{ url_for('admin.export_csv') }}" class="btn btn-secondary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    Export Full Complaints CSV
+  </a>
+</div>
+
+<!-- Performance Summary Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v6l4 2"></path>
+      </svg>
+    </div>
+    <div class="stat-content">
+      <div class="stat-value">{{ metrics.avg_resolution_hours }} hrs</div>
+      <div class="stat-label">Avg. Resolution Time</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <div class="stat-content">
+      <div class="stat-value">{{ metrics.on_time_rate }}%</div>
+      <div class="stat-label">12-Hr SLA On-Time Rate</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+    </div>
+    <div class="stat-content">
+      <div class="stat-value">{{ metrics.verified }} / {{ metrics.completed + metrics.verified }}</div>
+      <div class="stat-label">Verified vs Completed</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="stat-content">
+      <div class="stat-value" style="color: {% if metrics.overdue > 0 %}#dc2626{% else %}inherit{% endif %};">{{ metrics.overdue }}</div>
+      <div class="stat-label">Currently Overdue</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  
+  <!-- Category Breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Reports by Waste Category</h3>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="categoryChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Daily Influx Trend -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Daily Complaint Submissions (Last 7 Days)</h3>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Worker Workload Distribution -->
+  <div class="card" style="grid-column: 1 / -1;">
+    <div class="card-header">
+      <h3 class="card-title">Field Worker Task Distribution</h3>
+    </div>
+    <div style="height: 280px; position: relative;">
+      <canvas id="workerChart"></canvas>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Category Chart
+  const catCtx = document.getElementById('categoryChart')?.getContext('2d');
+  if (catCtx) {
+    const catLabels = {{ metrics.category_counts.keys()|list|tojson }};
+    const catData = {{ metrics.category_counts.values()|list|tojson }};
+    new Chart(catCtx, {
+      type: 'doughnut',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catData,
+          backgroundColor: [
+            '#16a34a', '#0284c7', '#f59e0b', '#dc2626', '#8b5cf6', '#64748b'
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // Daily Trend Chart
+  const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+  if (trendCtx) {
+    const trendLabels = {{ metrics.daily_trends|map(attribute='date')|list|tojson }};
+    const trendCounts = {{ metrics.daily_trends|map(attribute='count')|list|tojson }};
+    new Chart(trendCtx, {
+      type: 'bar',
+      data: {
+        labels: trendLabels,
+        datasets: [{
+          label: 'Complaints Logged',
+          data: trendCounts,
+          backgroundColor: '#15803d',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  // Worker Workload Chart
+  const workerCtx = document.getElementById('workerChart')?.getContext('2d');
+  if (workerCtx) {
+    const workerLabels = {{ metrics.worker_stats|map(attribute='name')|list|tojson }};
+    const activeData = {{ metrics.worker_stats|map(attribute='active_tasks')|list|tojson }};
+    const completedData = {{ metrics.worker_stats|map(attribute='completed_tasks')|list|tojson }};
+    new Chart(workerCtx, {
+      type: 'bar',
+      data: {
+        labels: workerLabels,
+        datasets: [
+          {
+            label: 'Active Tasks',
+            data: activeData,
+            backgroundColor: '#0284c7',
+            borderRadius: 4
+          },
+          {
+            label: 'Completed Tasks',
+            data: completedData,
+            backgroundColor: '#16a34a',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        },
+        plugins: {
+          legend: { position: 'top' }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

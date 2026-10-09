@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}500 Internal Server Error – AI Smart Cleaner{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 550px; text-align: center; padding: 4rem 1rem;">
+  <div class="card empty-state" style="box-shadow: var(--shadow-md);">
+    <div style="font-size: 3rem; font-weight: 900; color: #dc2626; margin-bottom: 0.5rem;">500</div>
+    <div class="empty-title">Internal Server Error</div>
+    <p class="empty-desc">An unexpected error occurred while processing the request. The database transaction was rolled back safely to prevent corruption.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return Home</a>
+  </div>
+</div>
+{% endblock %}

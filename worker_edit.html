@@ -1,0 +1,115 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Edit Worker – {{ worker.full_name }} – Admin Portal{% endblock %}
+{% block page_title %}Edit Field Worker Profile{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{{ url_for('admin.workers_list') }}" style="font-size: 0.88rem; color: #64748b;">&larr; Back to Field Workers Roster</a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+  <!-- Edit Profile Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Profile: {{ worker.full_name }}</h3>
+      <span style="font-family: monospace; font-size: 0.9rem; font-weight: 700; color: #64748b;">
+        Badge: {{ worker.worker_profile.employee_id if worker.worker_profile else 'N/A' }}
+      </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin.edit_worker', worker_id=worker.id) }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        {{ form.full_name(class="form-control") }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        {{ form.email(class="form-control") }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        {{ form.phone(class="form-control") }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Assigned Locality / Zone</label>
+        {{ form.assigned_locality(class="form-control") }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Max Concurrent Tasks</label>
+        {{ form.max_active_tasks(class="form-control") }}
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+        {{ form.is_active() }}
+        <label for="is_active" style="font-size: 0.9rem; font-weight: 600; cursor: pointer;">
+          Active Account (Can receive new task assignments)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        {{ form.notes(class="form-control", rows=3) }}
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+        {{ form.submit(class="btn btn-primary") }}
+        <a href="{{ url_for('admin.workers_list') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Worker Task History -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Assignment History</h3>
+      <span style="font-size: 0.85rem; color: #64748b;">{{ tasks|length }} total tasks assigned</span>
+    </div>
+
+    <div style="max-height: 500px; overflow-y: auto;">
+      {% if tasks %}
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tracking ID</th>
+              <th>Status</th>
+              <th>Assigned Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tasks %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('admin.complaint_detail', complaint_id=t.complaint.id) }}" style="font-family: monospace; font-weight: 600;">
+                    {{ t.complaint.tracking_id }}
+                  </a>
+                </td>
+                <td>
+                  <span class="badge badge-{{ t.complaint.status|lower }}">{{ t.complaint.status }}</span>
+                </td>
+                <td style="font-size: 0.8rem; color: #64748b;">
+                  {{ t.assigned_at.strftime('%b %d, %H:%M') }}
+                </td>
+                <td>
+                  <a href="{{ url_for('admin.complaint_detail', complaint_id=t.complaint.id) }}" class="btn btn-secondary btn-sm">Audit</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div style="padding: 2rem; text-align: center; color: #94a3b8;">
+          No task history for this worker yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

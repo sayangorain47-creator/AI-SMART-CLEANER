@@ -1,0 +1,258 @@
+{% extends 'worker/layout.html' %}
+
+{% block title %}Task #{{ complaint.tracking_id }} – Field Operations{% endblock %}
+{% block page_title %}Sanitation Task Execution{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <a href="{{ url_for('worker.dashboard') }}" style="font-size: 0.88rem; color: #64748b;">&larr; Back to My Assigned Tasks</a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; font-family: monospace;">
+      #{{ complaint.tracking_id }}
+    </h2>
+    <div style="font-size: 0.88rem; color: #64748b;">
+      Assigned on {{ complaint.current_assignment.assigned_at.strftime('%b %d, %Y at %I:%M %p UTC') }}
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+    <span class="badge badge-{{ complaint.status|lower }}" style="font-size: 0.9rem; padding: 0.45rem 1rem;">
+      Status: {{ complaint.status }}
+    </span>
+    <span class="badge badge-{{ complaint.deadline_status_info.badge }}" style="font-size: 0.9rem; padding: 0.45rem 1rem;">
+      {{ complaint.deadline_status_info.text }}
+    </span>
+    <span class="badge badge-prio-{{ complaint.priority|lower }}" style="font-size: 0.9rem; padding: 0.45rem 1rem;">
+      {{ complaint.priority }} Priority
+    </span>
+  </div>
+</div>
+
+<!-- Workflow Action Banner -->
+<div class="card" style="background: #ffffff; border: 2px solid #e2e8f0; margin-bottom: 1.5rem;">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.2rem;">Action Required</h3>
+      <div style="font-size: 0.85rem; color: #64748b;">
+        {% if complaint.status == 'ASSIGNED' %}
+          You have been assigned this task. Acknowledge and accept to indicate you are moving to site.
+        {% elif complaint.status == 'ACCEPTED' %}
+          You have accepted this task. When on site, click 'Start Cleaning' to begin field operations.
+        {% elif complaint.status in ['IN_PROGRESS', 'REOPENED'] %}
+          Work is ongoing. Once cleaning is completed, take after-cleaning photos and submit evidence below.
+        {% elif complaint.status == 'COMPLETED' %}
+          Your cleanup evidence has been submitted and is currently awaiting administrative audit and verification.
+        {% elif complaint.status == 'VERIFIED' %}
+          Cleanup has been approved and verified by municipal supervisors. Task closed!
+        {% endif %}
+      </div>
+    </div>
+
+    <div>
+      {% if complaint.status == 'ASSIGNED' %}
+        <form method="POST" action="{{ url_for('worker.accept_task', complaint_id=complaint.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary btn-lg">
+            ✓ Acknowledge & Accept Task
+          </button>
+        </form>
+      {% elif complaint.status == 'ACCEPTED' %}
+        <form method="POST" action="{{ url_for('worker.start_task', complaint_id=complaint.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-warning btn-lg">
+            ▶ Start Field Cleaning
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 3fr 2fr; gap: 1.5rem;">
+  <!-- Left Column: Details, Map, Evidence Upload -->
+  <div>
+    <!-- Waste Information Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Waste Spot Details</h3>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Issue Category</span>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #166534;">{{ complaint.category }}</div>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Citizen Description</span>
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; font-size: 0.92rem; color: #334155; margin-top: 0.35rem; line-height: 1.6;">
+          {{ complaint.description }}
+        </div>
+      </div>
+
+      <div>
+        <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Original Photographs (Reported by Citizen)</span>
+        <div style="margin-top: 0.5rem;">
+          {% if complaint.before_images %}
+            <div class="photo-gallery">
+              {% for img in complaint.before_images %}
+                <div class="photo-card">
+                  <a href="/{{ img.file_path }}" target="_blank">
+                    <img src="/{{ img.file_path }}" alt="Before cleanup">
+                  </a>
+                  <div class="photo-caption">{{ img.created_at.strftime('%b %d, %H:%M') }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div style="padding: 1rem; color: #94a3b8; font-size: 0.85rem; background: #f8fafc; border-radius: var(--radius-sm);">
+              No photos attached to initial report.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence Submission Form (Visible when IN_PROGRESS or REOPENED) -->
+    {% if complaint.status in ['IN_PROGRESS', 'REOPENED'] %}
+      <div class="card" style="border: 2px solid #bbf7d0;">
+        <div class="card-header" style="background: #f0fdf4; margin: -1.5rem -1.5rem 1.25rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid #bbf7d0;">
+          <h3 class="card-title" style="color: #166534;">Submit After-Cleaning Verification Evidence</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('worker.complete_task', complaint_id=complaint.id) }}" enctype="multipart/form-data" novalidate>
+          {{ form.hidden_tag() }}
+
+          <div class="form-group">
+            <label class="form-label">Upload Clear After-Cleaning Photographs *</label>
+            {{ form.images(class="form-control", id="images", accept="image/png, image/jpeg, image/webp", multiple=True) }}
+            <div class="form-help">
+              Upload clear photographs showing the cleaned and restored site. JPG, PNG, WEBP (Max 5MB each).
+            </div>
+            {% if form.images.errors %}
+              <div class="form-error">{{ form.images.errors[0] }}</div>
+            {% endif %}
+            <div id="image-preview-box" class="image-preview-container"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Field Completion Notes & Observations *</label>
+            {{ form.completion_notes(class="form-control", rows=4, placeholder="Describe actions taken: e.g. Waste collected (approx 50kg), sidewalk pressure-washed, disinfectant spray applied...") }}
+            {% if form.completion_notes.errors %}
+              <div class="form-error">{{ form.completion_notes.errors[0] }}</div>
+            {% endif %}
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            {{ form.submit(class="btn btn-success btn-lg btn-block") }}
+          </div>
+        </form>
+      </div>
+    {% endif %}
+
+    <!-- After Photos if COMPLETED or VERIFIED -->
+    {% if complaint.status in ['COMPLETED', 'VERIFIED'] %}
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Submitted After-Cleaning Evidence</h3>
+        </div>
+        <div>
+          {% if complaint.after_images %}
+            <div class="photo-gallery">
+              {% for img in complaint.after_images %}
+                <div class="photo-card">
+                  <a href="/{{ img.file_path }}" target="_blank">
+                    <img src="/{{ img.file_path }}" alt="After cleanup">
+                  </a>
+                  <div class="photo-caption">{{ img.created_at.strftime('%b %d, %H:%M') }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if complaint.latest_evidence %}
+            <div style="margin-top: 1.25rem; background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem;">
+              <strong>Your Completion Note:</strong>
+              <p style="color: #475569; font-size: 0.9rem; margin-top: 0.25rem;">
+                {{ complaint.latest_evidence.completion_notes }}
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column: Location, Map link, Supervisor Notes -->
+  <div>
+    <!-- Location Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Location & Navigation</h3>
+      </div>
+
+      <div style="font-size: 0.92rem; line-height: 1.6; margin-bottom: 1.25rem;">
+        <div><strong>Ward / Locality:</strong> {{ complaint.locality }}</div>
+        <div><strong>Street Address:</strong> {{ complaint.address }}</div>
+        {% if complaint.landmark %}
+          <div><strong>Landmark:</strong> {{ complaint.landmark }}</div>
+        {% endif %}
+        {% if complaint.latitude and complaint.longitude %}
+          <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.35rem;">
+            Coordinates: {{ complaint.latitude }}, {{ complaint.longitude }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div>
+        <a href="{{ map_url }}" target="_blank" class="btn btn-primary btn-block">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          Open Navigation in Google Maps
+        </a>
+      </div>
+    </div>
+
+    <!-- Supervisor Instructions -->
+    {% if complaint.current_assignment.notes %}
+      <div class="card" style="background: #fefce8; border: 1px solid #fef08a;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: #854d0e; margin-bottom: 0.35rem;">
+          Supervisor Instructions:
+        </h4>
+        <p style="font-size: 0.88rem; color: #713f12;">
+          {{ complaint.current_assignment.notes }}
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- Reopen Feedback if REOPENED -->
+    {% if complaint.status == 'REOPENED' %}
+      <div class="card" style="background: #fff7ed; border: 2px solid #fed7aa;">
+        <h4 style="font-size: 1rem; font-weight: 700; color: #9a3412; margin-bottom: 0.35rem;">
+          Action Required: Additional Cleaning Requested
+        </h4>
+        <p style="font-size: 0.9rem; color: #7c2d12;">
+          Administration requested additional cleaning on this site before approval. Please review the instructions and re-submit after cleaning.
+        </p>
+      </div>
+    {% endif %}
+
+    <!-- SLA Details Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">12-Hour SLA Timeline</h3>
+      </div>
+      <div style="font-size: 0.88rem; color: #475569; line-height: 1.8;">
+        <div>Reported: <strong>{{ complaint.created_at.strftime('%b %d, %H:%M UTC') }}</strong></div>
+        <div>Deadline: <strong>{{ complaint.target_resolution_at.strftime('%b %d, %H:%M UTC') }}</strong></div>
+        <div>Current Status: <strong>{{ complaint.deadline_status_info.text }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}403 Forbidden – AI Smart Cleaner{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 550px; text-align: center; padding: 4rem 1rem;">
+  <div class="card empty-state" style="box-shadow: var(--shadow-md);">
+    <div style="font-size: 3rem; font-weight: 900; color: #dc2626; margin-bottom: 0.5rem;">403</div>
+    <div class="empty-title">Access Forbidden</div>
+    <p class="empty-desc">You do not have administrative or authorized permissions to view or modify this resource.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return Home</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Dirty Area – AI Smart Cleaner{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 780px;">
+  <div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Report a Dirty Area</h1>
+    <p style="color: #64748b;">
+      Submit photographic evidence and location details. Your report will be assigned to a sanitation field team with a 12-hour resolution SLA target.
+    </p>
+  </div>
+
+  <div class="card" style="box-shadow: var(--shadow-md);">
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      {{ form.hidden_tag() }}
+
+      <!-- Category Selection -->
+      <div class="form-group">
+        <label for="category" class="form-label">Type of Waste / Cleanliness Issue *</label>
+        {{ form.category(class="form-control") }}
+        {% if form.category.errors %}
+          <div class="form-error">{{ form.category.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description" class="form-label">Detailed Description *</label>
+        {{ form.description(class="form-control", rows=4, placeholder="Describe the size of the accumulation, smell, blockage, or urgent hazards...") }}
+        <div class="form-help">Please provide specific details to help the team prepare adequate cleanup equipment.</div>
+        {% if form.description.errors %}
+          <div class="form-error">{{ form.description.errors[0] }}</div>
+        {% endif %}
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0; padding-top: 1.5rem;">
+        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 1rem;">Location Details</h4>
+
+        <!-- Address & Locality -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="locality" class="form-label">Locality / Neighborhood / Ward *</label>
+            {{ form.locality(class="form-control", placeholder="e.g. Downtown Ward 4, Sector 7") }}
+            {% if form.locality.errors %}
+              <div class="form-error">{{ form.locality.errors[0] }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="landmark" class="form-label">Nearest Landmark (Optional)</label>
+            {{ form.landmark(class="form-control", placeholder="e.g. Opposite City Metro Gate 2") }}
+            {% if form.landmark.errors %}
+              <div class="form-error">{{ form.landmark.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address" class="form-label">Specific Street Address / Location *</label>
+          {{ form.address(class="form-control", placeholder="e.g. Corner of 5th Main and 8th Cross Road") }}
+          {% if form.address.errors %}
+            <div class="form-error">{{ form.address.errors[0] }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Coordinates & Auto Detect -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-size: 0.88rem; font-weight: 600; color: #334155;">Geographic Coordinates (GPS Pin)</span>
+            <button type="button" id="btn-detect-location" class="btn btn-secondary btn-sm">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+              </svg>
+              Auto-Detect My GPS
+            </button>
+          </div>
+          <div id="geo-status" style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #64748b;"></div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div>
+              <label for="latitude" class="form-label" style="font-size: 0.8rem;">Latitude</label>
+              {{ form.latitude(class="form-control", id="latitude", placeholder="e.g. 12.9716") }}
+            </div>
+            <div>
+              <label for="longitude" class="form-label" style="font-size: 0.8rem;">Longitude</label>
+              {{ form.longitude(class="form-control", id="longitude", placeholder="e.g. 77.5946") }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photographic Evidence -->
+      <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0; padding-top: 1.5rem;">
+        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 0.5rem;">Photographic Evidence</h4>
+        <div class="form-help" style="margin-bottom: 0.75rem;">
+          Upload clear photographs of the dirty spot. Allowed formats: JPG, PNG, WEBP (Max 5MB each).
+        </div>
+
+        <div class="form-group">
+          {{ form.images(class="form-control", id="images", accept="image/png, image/jpeg, image/webp", multiple=True) }}
+          {% if form.images.errors %}
+            <div class="form-error">{{ form.images.errors[0] }}</div>
+          {% endif %}
+          <div id="image-preview-box" class="image-preview-container"></div>
+        </div>
+      </div>
+
+      <!-- Optional Citizen Contact Info -->
+      <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0; padding-top: 1.5rem;">
+        <h4 style="font-size: 1.1rem; color: #1e293b; margin-bottom: 0.25rem;">Citizen Information (Optional)</h4>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">
+          Your identity is kept completely private and will never be shown on the public tracking portal.
+        </p>
+
+        <div class="form-group">
+          <label for="complainant_name" class="form-label">Your Name</label>
+          {{ form.complainant_name(class="form-control", placeholder="Optional") }}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="complainant_phone" class="form-label">Phone Number</label>
+            {{ form.complainant_phone(class="form-control", placeholder="Optional (e.g. +1 555-0199)") }}
+            {% if form.complainant_phone.errors %}
+              <div class="form-error">{{ form.complainant_phone.errors[0] }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="complainant_email" class="form-label">Email Address</label>
+            {{ form.complainant_email(class="form-control", placeholder="Optional for email updates") }}
+            {% if form.complainant_email.errors %}
+              <div class="form-error">{{ form.complainant_email.errors[0] }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Submission Button -->
+      <div style="margin-top: 2rem;">
+        {{ form.submit(class="btn btn-primary btn-lg btn-block") }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

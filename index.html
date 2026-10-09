@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Home – AI Smart Cleaner{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section style="background: linear-gradient(135deg, #15803d 0%, #166534 100%); color: #ffffff; padding: 4.5rem 1rem; text-align: center;">
+  <div style="max-width: 800px; margin: 0 auto;">
+    <span style="background: rgba(255, 255, 255, 0.2); color: #ffffff; padding: 0.35rem 0.9rem; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; margin-bottom: 1.25rem;">
+      Civic Cleanliness & Waste Monitoring Platform
+    </span>
+    <h1 style="font-size: 2.75rem; font-weight: 800; line-height: 1.15; margin-bottom: 1.25rem;">
+      Report Waste. Track Action.<br>Build a Cleaner Community.
+    </h1>
+    <p style="font-size: 1.15rem; color: #dcfce7; margin-bottom: 2.25rem; line-height: 1.6;">
+      Empowering citizens to report garbage accumulation, overflowing dustbins, and illegal dumping directly to municipal field officers. Every report targets guaranteed action within 12 hours with photographic verification.
+    </p>
+    
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('public.report') }}" class="btn btn-lg" style="background-color: #ffffff; color: #166534; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: middle;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="16"></line>
+          <line x1="8" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Report Dirty Area
+      </a>
+      <a href="{{ url_for('public.track') }}" class="btn btn-lg" style="background-color: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.4); font-weight: 600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        Track Your Complaint
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Live Database Statistics Section -->
+<section style="margin-top: -2.5rem; padding: 0 1rem; margin-bottom: 3.5rem;">
+  <div style="max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+    
+    <div class="card" style="margin-bottom: 0; text-align: center; border-top: 4px solid #16a34a; box-shadow: var(--shadow-md);">
+      <div style="font-size: 2.25rem; font-weight: 800; color: #0f172a;">{{ total_complaints }}</div>
+      <div style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Reports Logged</div>
+      <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Community contributions</div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0; text-align: center; border-top: 4px solid #0284c7; box-shadow: var(--shadow-md);">
+      <div style="font-size: 2.25rem; font-weight: 800; color: #0284c7;">{{ active_operations }}</div>
+      <div style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Active Cleanups</div>
+      <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Dispatched & in progress</div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0; text-align: center; border-top: 4px solid #15803d; box-shadow: var(--shadow-md);">
+      <div style="font-size: 2.25rem; font-weight: 800; color: #15803d;">{{ verified_cleaned }}</div>
+      <div style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Verified & Closed</div>
+      <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Audited with photographic proof</div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0; text-align: center; border-top: 4px solid #d97706; box-shadow: var(--shadow-md);">
+      <div style="font-size: 2.25rem; font-weight: 800; color: #d97706;">{{ on_time_pct }}%</div>
+      <div style="font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase;">12-Hr Target SLA</div>
+      <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem;">Cleaned within 12 hours</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="container" style="padding-top: 0; margin-bottom: 3.5rem;">
+  <div style="text-align: center; max-width: 650px; margin: 0 auto 2.5rem;">
+    <h2 style="font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">How AI Smart Cleaner Works</h2>
+    <p style="color: #64748b;">A transparent, streamlined 3-step civic workflow connecting citizens and sanitation teams.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.75rem;">
+    <!-- Step 1 -->
+    <div class="card" style="border-radius: var(--radius-lg); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 3rem; font-weight: 900; color: #e2e8f0; line-height: 1;">01</div>
+      <div style="width: 50px; height: 50px; border-radius: 12px; background: #dcfce7; color: #166534; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">1. Spot & Report Waste</h3>
+      <p style="color: #64748b; font-size: 0.95rem;">
+        Take a picture of the unattended garbage, overflowing bin, or blocked drain. Submit with your location in seconds. A unique, secure tracking ID is immediately issued.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card" style="border-radius: var(--radius-lg); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 3rem; font-weight: 900; color: #e2e8f0; line-height: 1;">02</div>
+      <div style="width: 50px; height: 50px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">2. 12-Hour Field Dispatch</h3>
+      <p style="color: #64748b; font-size: 0.95rem;">
+        The system assigns the nearest active sanitation worker. The team arrives on site, starts operations, and works toward our strict 12-hour resolution deadline.
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card" style="border-radius: var(--radius-lg); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 1rem; right: 1.25rem; font-size: 3rem; font-weight: 900; color: #e2e8f0; line-height: 1;">03</div>
+      <div style="width: 50px; height: 50px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">3. Evidence Verification</h3>
+      <p style="color: #64748b; font-size: 0.95rem;">
+        Field staff upload photographic evidence of the clean spot. Administrators audit and approve the result before marking the complaint verified and publicly visible.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Action Card -->
+<section class="container" style="padding-top: 0;">
+  <div class="card" style="background: #ffffff; border: 2px solid #bbf7d0; padding: 2.5rem; text-align: center; border-radius: var(--radius-lg);">
+    <h3 style="font-size: 1.5rem; font-weight: 800; color: #166534; margin-bottom: 0.75rem;">See Dirty Streets or Drains Around You?</h3>
+    <p style="color: #475569; max-width: 600px; margin: 0 auto 1.75rem;">
+      Don't let unattended waste harm health and hygiene. Take action today by filing a report or tracking an existing one.
+    </p>
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      <a href="{{ url_for('public.report') }}" class="btn btn-primary btn-lg">File Cleanliness Report</a>
+      <a href="{{ url_for('public.track') }}" class="btn btn-secondary btn-lg">Check Progress by Tracking ID</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

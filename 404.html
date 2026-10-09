@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}404 Page Not Found – AI Smart Cleaner{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 550px; text-align: center; padding: 4rem 1rem;">
+  <div class="card empty-state" style="box-shadow: var(--shadow-md);">
+    <div style="font-size: 3rem; font-weight: 900; color: #64748b; margin-bottom: 0.5rem;">404</div>
+    <div class="empty-title">Page or Resource Not Found</div>
+    <p class="empty-desc">The complaint, tracking reference, or page requested does not exist or has been relocated.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn-primary">Return Home</a>
+  </div>
+</div>
+{% endblock %}
